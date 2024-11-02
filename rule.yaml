@@ -1,0 +1,67 @@
+rules:
+  - id: userid-flow
+    languages: [java]
+    message: |
+      User ID Flow Vulnerability (XSS and Information Leakage)
+    severity: ERROR
+    mode: taint
+    pattern-sources:
+      - pattern: "$USERID = $REQUEST.getParameter(\"userId\");"
+      - pattern: "processUserId($USERID)"
+    pattern-sinks:
+      - pattern: "$RESPONSE.getWriter().print($USERID);"
+      - pattern: "$RESPONSE.getWriter().println($USERID);"
+      - pattern: "return $USERID;"
+    pattern-sanitizers:
+      - pattern: "Encode.forHtml($USERID);"
+      - pattern: "$USERID.matches(\"[a-zA-Z0-9]+\");"
+
+  - id: comment-storage
+    languages: [java]
+    message: |
+      User Comments Flow Vulnerability (XSS)
+    severity: ERROR
+    mode: taint
+    pattern-sources:
+      - pattern: "$COMMENT = $REQUEST.getParameter(\"comment\");"
+      - pattern: "storeComment($COMMENT)"
+    pattern-sinks:
+      - pattern: "$RESPONSE.getWriter().print($COMMENT);"
+      - pattern: "$RESPONSE.getWriter().println($COMMENT);"
+      - pattern: "return $COMMENT;"
+    pattern-sanitizers:
+      - pattern: "Encode.forHtml($COMMENT);"
+
+  - id: user-search-flow
+    languages: [java]
+    message: |
+      The executeSearch() method uses validated query in unsafe context.
+    severity: ERROR
+    mode: taint
+    pattern-sources:
+      - pattern: "$QUERY = $REQUEST.getParameter(\"search\");"
+      - pattern: "executeSearch($QUERY)"
+    pattern-sinks:
+      - pattern: "$RESPONSE.getWriter().print($QUERY);"
+      - pattern: "$RESPONSE.getWriter().println($QUERY);"
+      - pattern: "executeSearch($QUERY);"
+    pattern-sanitizers:
+      - pattern: "Encode.forHtml($QUERY);"
+      - pattern: "validateSearchQuery($QUERY);"
+
+  - id: proper-sanitization
+    languages: [java]
+    message: |
+      Direct use of request parameters without sanitization.
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - pattern: "$PARAM = $REQUEST.getParameter($NAME);"
+    pattern-sinks:
+      - pattern: "$RESPONSE.getWriter().print($PARAM);"
+      - pattern: "$RESPONSE.getWriter().println($PARAM);"
+      - pattern: "return $PARAM;"
+    pattern-sanitizers:
+      - pattern: "Encode.forHtml($PARAM);"
+      - pattern: "$PARAM.matches($REGEX);"
+  
